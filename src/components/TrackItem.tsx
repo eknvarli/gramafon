@@ -4,6 +4,7 @@ import { Track } from '../services/api';
 import { useTheme } from '@react-navigation/native';
 import { Play, Plus } from 'lucide-react-native';
 import { useLibraryStore } from '../store/useLibraryStore';
+import { Colors } from '../constants/Colors';
 
 interface TrackItemProps {
   track: Track;
@@ -31,59 +32,61 @@ export const TrackItem: React.FC<TrackItemProps> = ({ track, onPress }) => {
   };
 
   return (
-    <View style={[styles.container, { borderBottomColor: colors.border }]}>
-      <TouchableOpacity style={styles.content} onPress={() => onPress(track)}>
-        <Image source={{ uri: track.thumbnail }} style={styles.thumbnail} />
-        <View style={styles.info}>
-          <Text style={[styles.title, { color: colors.text }]} numberOfLines={1}>
-            {track.title}
-          </Text>
-          <Text style={[styles.artist, { color: colors.text + '80' }]} numberOfLines={1}>
-            {track.artist}
-          </Text>
-        </View>
-      </TouchableOpacity>
-      
-      <View style={styles.actions}>
-        <TouchableOpacity onPress={handleAddTrack} style={styles.actionButton}>
-          <Plus color={colors.text + '60'} size={20} />
-        </TouchableOpacity>
-        <TouchableOpacity onPress={() => onPress(track)} style={styles.actionButton}>
-          <Play color={colors.primary} size={20} />
-        </TouchableOpacity>
+    <TouchableOpacity
+      style={[
+        styles.container,
+        { backgroundColor: Colors.cardBg, borderColor: Colors.glassBorder },
+      ]}
+      onPress={() => onPress(track)}
+      activeOpacity={0.7}
+    >
+      <Image source={{ uri: track.thumbnail }} style={styles.thumbnail} />
+      <View style={styles.info}>
+        <Text style={[styles.title, { color: colors.text }]} numberOfLines={1}>
+          {track.title}
+        </Text>
+        <Text style={[styles.artist, { color: '#B3B3B3' }]} numberOfLines={1}>
+          {track.artist}
+        </Text>
       </View>
-    </View>
+      <View style={styles.playIconContainer}>
+        <Play color={colors.primary} size={20} fill={colors.primary} opacity={0.8} />
+      </View>
+    </TouchableOpacity>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
     flexDirection: 'row',
-    alignItems: 'center',
     padding: 12,
-    borderBottomWidth: 1,
-  },
-  content: {
-    flex: 1,
-    flexDirection: 'row',
     alignItems: 'center',
+    marginBottom: 12,
+    marginHorizontal: 16,
+    borderRadius: 16,
+    borderWidth: 1,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.2,
+    shadowRadius: 8,
+    elevation: 4,
   },
   thumbnail: {
-    width: 50,
-    height: 50,
+    width: 52,
+    height: 52,
     borderRadius: 8,
-    marginRight: 12,
+    marginRight: 16,
   },
   info: {
     flex: 1,
-    marginRight: 12,
+    justifyContent: 'center',
   },
   title: {
-    fontSize: 16,
+    fontSize: 15,
     fontWeight: '600',
   },
   artist: {
-    fontSize: 14,
+    fontSize: 13,
     marginTop: 2,
   },
   actions: {
@@ -92,6 +95,9 @@ const styles = StyleSheet.create({
   },
   actionButton: {
     padding: 8,
-    marginLeft: 4,
+  },
+  playIcon: {
+    marginLeft: 8,
+    opacity: 0.8,
   },
 });

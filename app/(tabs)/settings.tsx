@@ -13,36 +13,28 @@ export default function SettingsScreen() {
 
   return (
     <ScrollView style={[styles.container, { backgroundColor: colors.background }]}>
-      <View style={[styles.section, { borderBottomColor: colors.border }]}>
-        <Text style={[styles.sectionTitle, { color: colors.text }]}>Appearance</Text>
-        
-        <TouchableOpacity 
-          style={styles.row} 
-          onPress={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
-        >
-          <Text style={[styles.rowText, { color: colors.text }]}>Dark Mode</Text>
-          <Switch 
-            value={theme === 'dark'} 
-            onValueChange={(val) => setTheme(val ? 'dark' : 'light')} 
-          />
-        </TouchableOpacity>
-
-        <TouchableOpacity 
-          style={styles.row} 
-          onPress={() => setTheme('system')}
-        >
-          <Text style={[styles.rowText, { color: colors.text }]}>Use System Theme</Text>
-          <Switch 
-            value={theme === 'system'} 
-            onValueChange={(val) => val && setTheme('system')} 
-          />
-        </TouchableOpacity>
+      <View style={styles.header}>
+        <Text style={styles.headerText}>Settings</Text>
       </View>
 
       <View style={styles.section}>
-        <Text style={[styles.sectionTitle, { color: colors.text }]}>About</Text>
-        <Text style={[styles.version, { color: colors.text + '80' }]}>Gramafon v1.0.0</Text>
-        <Text style={[styles.credits, { color: colors.text + '80' }]}>Powered by Ciao Music API</Text>
+        <Text style={styles.sectionTitle}>About</Text>
+        <View style={styles.infoRow}>
+          <Text style={styles.infoLabel}>Version</Text>
+          <Text style={styles.infoValue}>1.0.0</Text>
+        </View>
+        <View style={styles.infoRow}>
+          <Text style={styles.infoLabel}>Developer</Text>
+          <Text style={styles.infoValue}>Ekin Ilter Varli</Text>
+        </View>
+        <View style={styles.infoRow}>
+          <Text style={styles.infoLabel}>Powered by</Text>
+          <Text style={styles.infoValue}>Ciao Music API</Text>
+        </View>
+      </View>
+
+      <View style={styles.footer}>
+        <Text style={styles.footerText}>GRAMAFON</Text>
       </View>
     </ScrollView>
   );
@@ -51,34 +43,64 @@ export default function SettingsScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    padding: 16,
+  },
+  header: {
+    paddingHorizontal: 16,
+    paddingTop: 20,
+    marginBottom: 24,
+  },
+  headerText: {
+    fontSize: 28,
+    fontWeight: 'bold',
+    color: '#FFF',
   },
   section: {
-    paddingVertical: 16,
-    borderBottomWidth: 1,
+    marginBottom: 32,
+    paddingHorizontal: 16,
   },
   sectionTitle: {
-    fontSize: 18,
+    fontSize: 16,
     fontWeight: 'bold',
+    color: '#FFF',
     marginBottom: 16,
   },
   row: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
+    paddingVertical: 12,
+  },
+  rowInfo: {
+    flex: 1,
   },
   rowText: {
     fontSize: 16,
+    color: '#FFF',
+    fontWeight: '500',
   },
-  hint: {
-    fontSize: 12,
-    marginTop: 8,
+  infoRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    paddingVertical: 12,
   },
-  version: {
-    fontSize: 14,
+  infoLabel: {
+    color: '#B3B3B3',
+    fontSize: 16,
   },
-  credits: {
-    fontSize: 14,
-    marginTop: 4,
+  infoValue: {
+    color: '#FFF',
+    fontSize: 16,
+  },
+  footer: {
+    alignItems: 'center',
+    marginTop: 40,
+    marginBottom: 80,
+  },
+  footerText: {
+    fontSize: 24,
+    fontWeight: '900',
+    color: '#1DB954',
+    letterSpacing: 4,
+    opacity: 0.5,
   },
 });

@@ -6,29 +6,23 @@ import { apiService, Track } from '../../src/services/api';
 import { TrackItem } from '../../src/components/TrackItem';
 import { usePlayerStore } from '../../src/store/playerStore';
 
+import { Colors } from '../../src/constants/Colors';
+
 export default function SearchScreen() {
   const { colors } = useTheme();
-  const [query, setQuery] = useState('');
-  const [tracks, setTracks] = useState<Track[]>([]);
-  const [loading, setLoading] = useState(false);
-  const playTrack = usePlayerStore((state) => state.playTrack);
-  const setQueue = usePlayerStore((state) => state.setQueue);
+  const [search, setSearch] = React.useState('');
+  const [tracks, setTracks] = React.useState<Track[]>([]);
+  const [loading, setLoading] = React.useState(false);
+  const { playTrack, setQueue } = usePlayerStore();
 
-  const handleSearch = async (text: string) => {
-    setQuery(text);
-    if (text.length < 2) {
-      setTracks([]);
-      return;
-    }
-
+  const handleSearch = async () => {
+    if (!search.trim()) return;
     setLoading(true);
     try {
-      const results = await apiService.search(text);
-      if (results) {
-        setTracks(results);
-      }
+      const results = await apiService.search(search); // Changed from api.searchTracks to apiService.search to match original import
+      setTracks(results);
     } catch (error) {
-      console.error('Search UI error:', error);
+      console.error('Search error:', error);
     } finally {
       setLoading(false);
     }
@@ -41,15 +35,20 @@ export default function SearchScreen() {
 
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
-      <View style={[styles.searchBar, { backgroundColor: colors.card, borderColor: colors.border }]}>
-        <SearchIcon color={colors.text + '80'} size={20} style={styles.icon} />
-        <TextInput
-          style={[styles.input, { color: colors.text }]}
-          placeholder="Artists, songs, or podcasts"
-          placeholderTextColor={colors.text + '80'}
-          value={query}
-          onChangeText={handleSearch}
-        />
+      <View style={styles.header}>
+        <Text style={[styles.headerTitle, { color: colors.text }]}>Search</Text>
+        <View style={[styles.searchContainer, { backgroundColor: Colors.cardBg, borderColor: Colors.glassBorder }]}>
+          <SearchIcon color="#B3B3B3" size={20} />
+          <TextInput
+            style={[styles.input, { color: colors.text }]}
+            placeholder="Songs, artists, or podcasts"
+            placeholderTextColor="#777"
+            value={search}
+            onChangeText={setSearch}
+            onSubmitEditing={handleSearch}
+            returnKeyType="search"
+          />
+        </View>
       </View>
 
       {loading ? (
@@ -57,14 +56,18 @@ export default function SearchScreen() {
       ) : (
         <FlatList
           data={tracks}
-          keyExtractor={(item, index) => item.id || index.toString()}
+          keyExtractor={(item) => item.id || Math.random().toString()}
           renderItem={({ item }) => (
             <TrackItem track={item} onPress={onTrackPress} />
           )}
+          contentContainerStyle={styles.listContent}
           ListEmptyComponent={
-            query.length > 1 ? (
-              <Text style={[styles.empty, { color: colors.text + '80' }]}>No results found</Text>
-            ) : null
+            search ? null : (
+              <View style={styles.emptyContainer}>
+                <SearchIcon color="#282828" size={64} />
+                <Text style={styles.emptyText}>Find your favorite music</Text>
+              </View>
+            )
           }
         />
       )}
@@ -76,28 +79,47 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
   },
-  searchBar: {
+  header: {
+    paddingTop: 60,
+    paddingHorizontal: 16,
+    paddingBottom: 16,
+  },
+  headerTitle: {
+    fontSize: 28,
+    fontWeight: 'bold',
+    marginBottom: 16,
+  },
+  searchContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    margin: 16,
     paddingHorizontal: 12,
-    paddingVertical: 8,
+    height: 48,
     borderRadius: 12,
     borderWidth: 1,
   },
-  icon: {
-    marginRight: 8,
-  },
   input: {
     flex: 1,
-    fontSize: 16,
+    marginLeft: 8,
+    fontSize: 14,
+    fontWeight: '500',
   },
   loader: {
-    marginTop: 40,
+    flex: 1,
+    marginTop: 100,
   },
-  empty: {
-    textAlign: 'center',
-    marginTop: 40,
+  listContent: {
+    paddingBottom: 100,
+  },
+  emptyContainer: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: 100,
+  },
+  emptyText: {
+    color: '#555',
     fontSize: 16,
+    marginTop: 16,
+    fontWeight: '500',
   },
 });

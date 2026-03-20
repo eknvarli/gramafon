@@ -1,9 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, FlatList, TouchableOpacity, TextInput, Modal, Alert } from 'react-native';
+import { View, Text, StyleSheet, FlatList, TouchableOpacity, TextInput, Modal, Alert, Image } from 'react-native';
 import { useTheme } from '@react-navigation/native';
 import { useLibraryStore, Playlist } from '../../src/store/useLibraryStore';
-import { Plus, Music2, Trash2 } from 'lucide-react-native';
+import { Plus, ListMusic, Trash2 } from 'lucide-react-native';
 import { useRouter } from 'expo-router';
+
+import { Colors } from '../../src/constants/Colors';
+import { BlurView } from 'expo-blur';
 
 export default function PlaylistsScreen() {
   const { colors } = useTheme();
@@ -16,11 +19,12 @@ export default function PlaylistsScreen() {
     loadLibrary();
   }, []);
 
-  const handleCreate = async () => {
-    if (!newPlaylistName.trim()) return;
-    await createPlaylist(newPlaylistName);
-    setNewPlaylistName('');
-    setModalVisible(false);
+  const handleCreate = () => {
+    if (newPlaylistName) {
+      createPlaylist(newPlaylistName);
+      setNewPlaylistName('');
+      setModalVisible(false);
+    }
   };
 
   const confirmDelete = (id: string, name: string) => {
@@ -30,61 +34,80 @@ export default function PlaylistsScreen() {
     ]);
   };
 
-  const renderPlaylist = ({ item }: { item: Playlist }) => (
-    <TouchableOpacity 
-      style={[styles.playlistItem, { borderBottomColor: colors.border }]}
-      onPress={() => router.push(`/playlist/${item.id}`)}
-    >
-      <View style={[styles.playlistIcon, { backgroundColor: colors.card }]}>
-        <Music2 color={colors.primary} size={24} />
-      </View>
-      <View style={styles.playlistInfo}>
-        <Text style={[styles.playlistName, { color: colors.text }]}>{item.name}</Text>
-        <Text style={[styles.playlistTracks, { color: colors.text + '80' }]}>
-          {item.tracks.length} tracks
-        </Text>
-      </View>
-      <TouchableOpacity onPress={() => confirmDelete(item.id, item.name)} style={styles.deleteButton}>
-        <Trash2 color={colors.text + '40'} size={20} />
-      </TouchableOpacity>
-    </TouchableOpacity>
-  );
-
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
+      <View style={styles.header}>
+        <Text style={[styles.headerTitle, { color: colors.text }]}>Your Library</Text>
+        <TouchableOpacity 
+          style={[styles.createButton, { backgroundColor: Colors.cardBg, borderColor: Colors.glassBorder }]} 
+          onPress={() => setModalVisible(true)}
+        >
+          <Plus color={colors.primary} size={20} />
+          <Text style={[styles.createButtonText, { color: colors.text }]}>New Playlist</Text>
+        </TouchableOpacity>
+      </View>
+
       <FlatList
         data={playlists}
         keyExtractor={(item) => item.id}
-        renderItem={renderPlaylist}
-        ListHeaderComponent={
-          <TouchableOpacity style={styles.createButton} onPress={() => setModalVisible(true)}>
-            <Plus color={colors.primary} size={24} />
-            <Text style={[styles.createButtonText, { color: colors.primary }]}>Create Playlist</Text>
-          </TouchableOpacity>
+        renderItem={({ item }) => {
+          const firstTrackCover = item.tracks.length > 0 ? item.tracks[0].thumbnail : null;
+          return (
+            <TouchableOpacity 
+              style={[styles.playlistItem, { backgroundColor: Colors.cardBg, borderColor: Colors.glassBorder }]}
+              onPress={() => router.push(`/playlist/${item.id}`)}
+            >
+              <View style={[styles.playlistIcon, { backgroundColor: colors.primary + '20' }]}>
+                {firstTrackCover ? (
+                  <Image source={{ uri: firstTrackCover }} style={styles.coverImage} />
+                ) : (
+                  <ListMusic color={colors.primary} size={32} />
+                )}
+              </View>
+              <View style={styles.playlistInfo}>
+                <Text style={[styles.playlistName, { color: colors.text }]}>{item.name}</Text>
+                <Text style={styles.playlistCount}>{item.tracks.length} tracks</Text>
+              </View>
+              <TouchableOpacity onPress={() => confirmDelete(item.id, item.name)} style={styles.deleteButton}>
+                <Trash2 color="#B3B3B3" size={20} />
+              </TouchableOpacity>
+            </TouchableOpacity>
+          );
+        }}
+        contentContainerStyle={styles.listContent}
+        ListEmptyComponent={
+          <View style={styles.emptyContainer}>
+            <ListMusic color="#282828" size={64} />
+            <Text style={styles.emptyText}>Create your first playlist to get started</Text>
+          </View>
         }
       />
 
-      <Modal visible={modalVisible} animationType="slide" transparent>
+      <Modal
+        visible={modalVisible}
+        transparent
+        animationType="fade"
+      >
         <View style={styles.modalOverlay}>
-          <View style={[styles.modalContent, { backgroundColor: colors.card }]}>
+          <BlurView intensity={90} tint="dark" style={styles.modalContent}>
             <Text style={[styles.modalTitle, { color: colors.text }]}>New Playlist</Text>
             <TextInput
-              style={[styles.input, { color: colors.text, borderColor: colors.border }]}
-              placeholder="Name"
-              placeholderTextColor={colors.text + '40'}
+              style={[styles.input, { color: colors.text, borderColor: Colors.glassBorder }]}
+              placeholder="Playlist name"
+              placeholderTextColor="#777"
               value={newPlaylistName}
               onChangeText={setNewPlaylistName}
               autoFocus
             />
-            <View style={styles.modalButtons}>
-              <TouchableOpacity onPress={() => setModalVisible(false)}>
-                <Text style={{ color: colors.text + '80', padding: 12 }}>Cancel</Text>
+            <View style={styles.modalActions}>
+              <TouchableOpacity onPress={() => setModalVisible(false)} style={styles.modalButton}>
+                <Text style={{ color: '#B3B3B3' }}>Cancel</Text>
               </TouchableOpacity>
-              <TouchableOpacity onPress={handleCreate}>
-                <Text style={{ color: colors.primary, fontWeight: 'bold', padding: 12 }}>Create</Text>
+              <TouchableOpacity onPress={handleCreate} style={[styles.modalButton, styles.primaryModalButton]}>
+                <Text style={{ color: '#FFF', fontWeight: 'bold' }}>Create</Text>
               </TouchableOpacity>
             </View>
-          </View>
+          </BlurView>
         </View>
       </Modal>
     </View>
@@ -95,70 +118,124 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
   },
+  header: {
+    paddingTop: 60,
+    paddingHorizontal: 16,
+    paddingBottom: 24,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  headerTitle: {
+    fontSize: 28,
+    fontWeight: 'bold',
+  },
   createButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    padding: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: '#ccc', // Will use theme border if needed
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 20,
+    borderWidth: 1,
   },
   createButtonText: {
-    marginLeft: 12,
-    fontSize: 16,
+    marginLeft: 6,
     fontWeight: '600',
+    fontSize: 13,
+  },
+  listContent: {
+    paddingBottom: 120,
   },
   playlistItem: {
     flexDirection: 'row',
     alignItems: 'center',
     padding: 12,
-    borderBottomWidth: 1,
+    marginHorizontal: 16,
+    marginBottom: 12,
+    borderRadius: 20,
+    borderWidth: 1,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.2,
+    shadowRadius: 8,
+    elevation: 4,
   },
   playlistIcon: {
-    width: 48,
-    height: 48,
-    borderRadius: 8,
+    width: 64,
+    height: 64,
+    borderRadius: 12,
     alignItems: 'center',
     justifyContent: 'center',
-    marginRight: 12,
+    overflow: 'hidden',
+  },
+  coverImage: {
+    width: '100%',
+    height: '100%',
   },
   playlistInfo: {
     flex: 1,
+    marginLeft: 16,
   },
   playlistName: {
-    fontSize: 16,
-    fontWeight: '600',
+    fontSize: 17,
+    fontWeight: '700',
+    marginBottom: 4,
   },
-  playlistTracks: {
-    fontSize: 14,
-    marginTop: 2,
+  playlistCount: {
+    color: '#B3B3B3',
+    fontSize: 13,
   },
   deleteButton: {
-    padding: 8,
+    padding: 12,
+  },
+  emptyContainer: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: 100,
+  },
+  emptyText: {
+    color: '#555',
+    fontSize: 16,
+    marginTop: 16,
+    fontWeight: '500',
+    textAlign: 'center',
+    paddingHorizontal: 40,
   },
   modalOverlay: {
     flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.5)',
+    backgroundColor: 'rgba(0,0,0,0.6)',
     justifyContent: 'center',
-    padding: 32,
+    alignItems: 'center',
+    padding: 24,
   },
   modalContent: {
-    borderRadius: 16,
+    width: '100%',
     padding: 24,
+    borderRadius: 32,
+    overflow: 'hidden',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.1)',
   },
   modalTitle: {
     fontSize: 20,
     fontWeight: 'bold',
-    marginBottom: 16,
+    marginBottom: 20,
+    textAlign: 'center',
   },
   input: {
-    borderWidth: 1,
-    borderRadius: 8,
-    padding: 12,
-    fontSize: 16,
-    marginBottom: 16,
+    height: 56,
+    borderBottomWidth: 1,
+    fontSize: 18,
+    marginBottom: 24,
   },
-  modalButtons: {
+  modalActions: {
     flexDirection: 'row',
     justifyContent: 'flex-end',
+  },
+  modalButton: {
+    paddingHorizontal: 20,
+    paddingVertical: 12,
+    marginLeft: 12,
   },
 });

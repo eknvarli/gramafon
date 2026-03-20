@@ -25,29 +25,29 @@ interface PlayerState {
 export const usePlayerStore = create<PlayerState>((set, get) => ({
   currentTrack: null,
   isPlaying: false,
+  isLoading: false,
   sound: null,
   queue: [],
   position: 0,
   duration: 0,
 
   playTrack: async (track: Track) => {
+    const { sound: existingSound, isLoading } = get();
+    if (isLoading) return; // Prevent concurrent loading
+
+    set({ isLoading: true });
+    
     try {
-      const { sound: existingSound } = get();
-      
       if (existingSound) {
         await existingSound.unloadAsync().catch(() => {});
+        set({ sound: null });
       }
 
-      if (!track.id) {
-        console.error('Cannot play track: ID is missing', track);
-        return;
-      }
       const streamUrl = await apiService.getStreamUrl(track.id);
       if (!streamUrl) {
-        console.error('Could not get stream URL for track:', track.id);
+        set({ isLoading: false });
         return;
       }
-      console.log('Playing direct stream:', streamUrl);
       
       const { sound } = await Audio.Sound.createAsync(
         { uri: streamUrl },
@@ -62,16 +62,14 @@ export const usePlayerStore = create<PlayerState>((set, get) => ({
             if (status.didJustFinish) {
               get().next().catch(console.error);
             }
-          } else if (status.error) {
-            console.error('Audio playback status error:', status.error);
           }
         }
       );
 
-      set({ currentTrack: track, sound, isPlaying: true });
+      set({ currentTrack: track, sound, isPlaying: true, isLoading: false });
     } catch (error) {
-      console.error('Failed to play track:', error);
-      set({ isPlaying: false });
+      console.error('Playback error:', error);
+      set({ isLoading: false, isPlaying: false });
     }
   },
 
@@ -100,44 +98,34 @@ export const usePlayerStore = create<PlayerState>((set, get) => ({
       }
       set({ sound: null, isPlaying: false, currentTrack: null });
     } catch (error) {
-      console.error('Stop audio error:', error);
+      console.error('Stop error:', error);
     }
   },
 
   next: async () => {
-    try {
-      const { queue, currentTrack } = get();
-      if (queue.length === 0 || !currentTrack) return;
-      
-      const currentIndex = queue.findIndex(t => t.id === currentTrack.id);
-      const nextIndex = (currentIndex + 1) % queue.length;
-      await get().playTrack(queue[nextIndex]);
-    } catch (error) {
-      console.error('Next track error:', error);
-    }
+    const { queue, currentTrack, isLoading } = get();
+    if (queue.length === 0 || !currentTrack || isLoading) return;
+    
+    const currentIndex = queue.findIndex(t => t.id === currentTrack.id);
+    if (currentIndex === -1) return;
+    const nextIndex = (currentIndex + 1) % queue.length;
+    await get().playTrack(queue[nextIndex]);
   },
 
   previous: async () => {
-    try {
-      const { queue, currentTrack } = get();
-      if (queue.length === 0 || !currentTrack) return;
-      
-      const currentIndex = queue.findIndex(t => t.id === currentTrack.id);
-      const prevIndex = (currentIndex - 1 + queue.length) % queue.length;
-      await get().playTrack(queue[prevIndex]);
-    } catch (error) {
-      console.error('Previous track error:', error);
-    }
+    const { queue, currentTrack, isLoading } = get();
+    if (queue.length === 0 || !currentTrack || isLoading) return;
+    
+    const currentIndex = queue.findIndex(t => t.id === currentTrack.id);
+    if (currentIndex === -1) return;
+    const prevIndex = (currentIndex - 1 + queue.length) % queue.length;
+    await get().playTrack(queue[prevIndex]);
   },
 
   seek: async (position: number) => {
-    try {
-      const { sound } = get();
-      if (sound) {
-        await sound.setPositionAsync(position);
-      }
-    } catch (error) {
-      console.error('Seek error:', error);
+    const { sound } = get();
+    if (sound) {
+      await sound.setPositionAsync(position);
     }
   },
 

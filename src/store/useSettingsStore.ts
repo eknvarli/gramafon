@@ -4,23 +4,20 @@ import { STORAGE_KEYS } from '../constants/Config';
 import { Appearance } from 'react-native';
 
 interface SettingsState {
-  theme: 'light' | 'dark' | 'system';
-  setTheme: (theme: 'light' | 'dark' | 'system') => Promise<void>;
+  theme: 'dark';
+  setTheme: (theme: 'dark') => Promise<void>;
   loadSettings: () => Promise<void>;
 }
 
 export const useSettingsStore = create<SettingsState>((set) => ({
-  theme: 'system',
+  theme: 'dark',
 
   setTheme: async (theme) => {
-    await AsyncStorage.setItem(STORAGE_KEYS.THEME, theme);
+    // Keep for potential future needs but skip storage for now if we force it
     set({ theme });
   },
 
   loadSettings: async () => {
-    const theme = await AsyncStorage.getItem(STORAGE_KEYS.THEME) as 'light' | 'dark' | 'system';
-    if (theme) {
-      set({ theme });
-    }
+    set({ theme: 'dark' });
   },
 }));

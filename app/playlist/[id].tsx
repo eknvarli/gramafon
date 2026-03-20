@@ -1,12 +1,14 @@
 import React, { useEffect } from 'react';
 import { View, Text, StyleSheet, FlatList, TouchableOpacity } from 'react-native';
+import { BlurView } from 'expo-blur';
+import { Colors } from '../../src/constants/Colors';
 import { useTheme } from '@react-navigation/native';
 import { useLocalSearchParams, useRouter, Stack } from 'expo-router';
 import { useLibraryStore } from '../../src/store/useLibraryStore';
 import { usePlayerStore } from '../../src/store/playerStore';
 import { TrackItem } from '../../src/components/TrackItem';
 import { Track } from '../../src/services/api';
-import { Play } from 'lucide-react-native';
+import { ChevronLeft, Play } from 'lucide-react-native';
 
 export default function PlaylistDetailScreen() {
   const { id } = useLocalSearchParams();
@@ -37,7 +39,20 @@ export default function PlaylistDetailScreen() {
 
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
-      <Stack.Screen options={{ title: playlist.name }} />
+      <Stack.Screen 
+        options={{ 
+          title: playlist.name,
+          headerLeft: () => (
+            <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
+              <ChevronLeft color={colors.text} size={28} />
+            </TouchableOpacity>
+          ),
+          headerTransparent: true,
+          headerBackground: () => (
+            <BlurView intensity={80} tint="dark" style={StyleSheet.absoluteFill} />
+          ),
+        }} 
+      />
       
       <FlatList
         data={playlist.tracks}
@@ -45,12 +60,15 @@ export default function PlaylistDetailScreen() {
         renderItem={({ item }) => (
           <TrackItem track={item} onPress={onTrackPress} />
         )}
+        contentContainerStyle={styles.listContent}
         ListHeaderComponent={
           <View style={styles.header}>
-            <Text style={[styles.name, { color: colors.text }]}>{playlist.name}</Text>
-            <Text style={[styles.count, { color: colors.text + '80' }]}>
-              {playlist.tracks.length} tracks
-            </Text>
+            <View style={styles.headerInfo}>
+              <Text style={[styles.name, { color: colors.text }]}>{playlist.name}</Text>
+              <Text style={[styles.count, { color: '#B3B3B3' }]}>
+                {playlist.tracks.length} tracks
+              </Text>
+            </View>
             <TouchableOpacity 
               style={[styles.playButton, { backgroundColor: colors.primary }]}
               onPress={playAll}
@@ -74,33 +92,53 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
   },
+  listContent: {
+    paddingTop: 100, // For transparent header
+    paddingBottom: 100,
+  },
+  backButton: {
+    marginLeft: 8,
+  },
   header: {
+    flexDirection: 'row',
     padding: 24,
     alignItems: 'center',
-    borderBottomWidth: 1,
-    borderBottomColor: 'rgba(0,0,0,0.05)',
+    justifyContent: 'space-between',
+    backgroundColor: Colors.cardBg,
+    marginHorizontal: 16,
+    borderRadius: 24,
+    marginBottom: 24,
+    borderWidth: 1,
+    borderColor: Colors.glassBorder,
+  },
+  headerInfo: {
+    flex: 1,
   },
   name: {
-    fontSize: 28,
+    fontSize: 24,
     fontWeight: 'bold',
   },
   count: {
-    fontSize: 16,
-    marginTop: 4,
-    marginBottom: 20,
+    fontSize: 14,
+    marginTop: 2,
   },
   playButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: 32,
-    paddingVertical: 12,
-    borderRadius: 24,
+    paddingHorizontal: 20,
+    paddingVertical: 10,
+    borderRadius: 20,
+    shadowColor: Colors.spotifyGreen,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 4,
   },
   playButtonText: {
     color: '#fff',
-    fontSize: 18,
+    fontSize: 14,
     fontWeight: 'bold',
-    marginLeft: 8,
+    marginLeft: 6,
   },
   empty: {
     textAlign: 'center',

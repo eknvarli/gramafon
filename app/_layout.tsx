@@ -1,13 +1,13 @@
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { useColorScheme } from 'react-native';
-import { ThemeProvider, DarkTheme, DefaultTheme } from '@react-navigation/native';
+import { ThemeProvider } from '@react-navigation/native';
 import { useSettingsStore } from '../src/store/useSettingsStore';
 import { useEffect } from 'react';
 import { Audio } from 'expo-av';
+import { SpotifyTheme } from '../src/constants/Colors';
 
 export default function RootLayout() {
-  const systemColorScheme = useColorScheme();
   const { theme, loadSettings } = useSettingsStore();
 
   useEffect(() => {
@@ -23,15 +23,13 @@ export default function RootLayout() {
     });
   }, []);
 
-  const colorScheme = theme === 'system' ? systemColorScheme : theme;
-
   return (
-    <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-      <Stack>
-        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-        <Stack.Screen name="player" options={{ presentation: 'modal', title: 'Now Playing' }} />
+    <ThemeProvider value={SpotifyTheme}>
+      <Stack screenOptions={{ headerShown: false }}>
+        <Stack.Screen name="(tabs)" />
+        <Stack.Screen name="player" options={{ presentation: 'modal', animation: 'slide_from_bottom' }} />
       </Stack>
-      <StatusBar style="auto" />
+      <StatusBar style="light" />
     </ThemeProvider>
   );
 }
